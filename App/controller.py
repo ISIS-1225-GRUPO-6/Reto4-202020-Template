@@ -23,7 +23,7 @@
  * Dario Correal
  *
  """
-
+import os
 import config as cf
 from App import model
 import csv

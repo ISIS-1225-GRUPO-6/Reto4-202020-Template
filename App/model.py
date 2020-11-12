@@ -89,14 +89,11 @@ def addStopConnection(analyzer, lastservice):
     """
     try:
         origin = lastservice['start station id']
-        destination = formatVertex(service)
-        cleanServiceDuration(lastservice, service)
+        destination = lastservice['end station id']
         duration = int(lastservice['tripduration'])
         addStop(analyzer, origin)
         addStop(analyzer, destination)
         addConnection(analyzer, origin, destination, duration)
-        """addRouteStop(analyzer, service)
-        addRouteStop(analyzer, lastservice)"""
         return analyzer
     except Exception as exp:
         error.reraise(exp, 'model:addStopConnection')
@@ -152,15 +149,6 @@ def totalStops(analyzer):
 # Funciones Helper
 # ==============================
 
-def cleanServiceDuration(lastservice, service):
-    """
-    En caso de que el archivo tenga un espacio en la
-    distancia, se reemplaza con cero.
-    """
-    if service['Duration'] == '':
-        service['Duration'] = 0
-    if lastservice['Duration'] == '':
-        lastservice['Duration'] = 0
 # ==============================
 # Funciones de Comparacion
 # ==============================
