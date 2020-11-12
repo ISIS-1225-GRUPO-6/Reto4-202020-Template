@@ -42,12 +42,69 @@ operación seleccionada.
 # ___________________________________________________
 #  Variables
 # ___________________________________________________
-
+servicefile = '201801-1-citibike-tripdata.csv'
+initialStation = None
+recursionLimit = 20000
 
 # ___________________________________________________
 #  Menu principal
 # ___________________________________________________
+def printMenu():
+    print("\n")
+    print("*******************************************")
+    print("Bienvenido")
+    print("1- Inicializar Analizador")
+    print("2- Cargar información de rutas de citybike")
+    print("3- Calcular componentes conectados")
+    print("4- Establecer estación base:")
+    print("5- Requerimiento 1")
+    print("6- Requerimiento 2")
+    print("7- Requerimiento 3")
+    print("8- Requerimiento 5")
+    print("9- Requerimiento 6")
+    print("10- Requerimiento 7")
+    print("11- Requerimiento 8")
+    
+    print("0- Salir")
+    print("*******************************************")
+
+
+def optionTwo():
+    print("\nCargando información de transporte de singapur ....")
+    controller.loadServices(cont, servicefile)
+    numedges = controller.totalConnections(cont)
+    numvertex = controller.totalStops(cont)
+    print('Numero de vertices: ' + str(numvertex))
+    print('Numero de arcos: ' + str(numedges))
+    print('El limite de recursion actual: ' + str(sys.getrecursionlimit()))
+    sys.setrecursionlimit(recursionLimit)
+    print('El limite de recursion se ajusta a: ' + str(recursionLimit))
+
+def optionThree():
+    print('El número de componentes conectados es: ' +
+          str(controller.connectedComponents(cont)))
 
 """
 Menu principal
 """
+while True:
+    printMenu()
+    inputs = input('Seleccione una opción para continuar\n>')
+
+    if int(inputs[0]) == 1:
+        print("\nInicializando....")
+        cont = controller.init()
+
+    elif int(inputs[0]) == 2:
+        executiontime = timeit.timeit(optionTwo, number=1)
+        print("Tiempo de ejecución: " + str(executiontime))
+
+    elif int(inputs[0]) == 3:
+        executiontime = timeit.timeit(optionThree, number=1)
+        print("Tiempo de ejecución: " + str(executiontime))
+
+    elif int(inputs[0]) == 4:
+        msg = "Estación Base: Start station id (Ej: 72): "
+        initialStation = input(msg)
+        executiontime = timeit.timeit(optionFour, number=1)
+        print("Tiempo de ejecución: " + str(executiontime))

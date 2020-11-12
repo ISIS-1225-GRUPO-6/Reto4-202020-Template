@@ -42,16 +42,137 @@ de creacion y consulta sobre las estructuras de datos.
 #                       API
 # -----------------------------------------------------
 
+def newAnalyzer():
+    """ Inicializa el analizador
+
+   stops: Tabla de hash para guardar los vertices del grafo
+   connections: Grafo para representar las rutas entre estaciones
+   components: Almacena la informacion de los componentes conectados
+   paths: Estructura que almancena los caminos de costo minimo desde un
+           vertice determinado a todos los otros vértices del grafo
+    """
+    try:
+        analyzer = {
+                    'stops': None,
+                    'connections': None,
+                    'components': None,
+                    'paths': None
+                    }
+
+        analyzer['stops'] = m.newMap(numelements=14000,
+                                     maptype='PROBING',
+                                     comparefunction=compareStopIds)
+
+        analyzer['connections'] = gr.newGraph(datastructure='ADJ_LIST',
+                                              directed=False,
+                                              size=14000,
+                                              comparefunction=compareStopIds)
+        return analyzer
+    except Exception as exp:
+        error.reraise(exp, 'model:newAnalyzer')
+
+
+
 # Funciones para agregar informacion al grafo
+
+def addStopConnection(analyzer, lastservice):
+    """
+    Adiciona las estaciones al grafo como vertices y arcos entre las
+    estaciones adyacentes.
+
+    Los vertices tienen por nombre el identificador de la estacion
+    seguido de la ruta que sirve.  Por ejemplo:
+
+    75009-10
+
+    Si la estacion sirve otra ruta, se tiene: 75009-101
+    """
+    try:
+        origin = lastservice['start station id']
+        destination = formatVertex(service)
+        cleanServiceDuration(lastservice, service)
+        duration = int(lastservice['tripduration'])
+        addStop(analyzer, origin)
+        addStop(analyzer, destination)
+        addConnection(analyzer, origin, destination, duration)
+        """addRouteStop(analyzer, service)
+        addRouteStop(analyzer, lastservice)"""
+        return analyzer
+    except Exception as exp:
+        error.reraise(exp, 'model:addStopConnection')
+
+def addStop(analyzer, stopid):
+    """
+    Adiciona una estación como un vertice del grafo
+    """
+    try:
+        if not gr.containsVertex(analyzer['connections'], stopid):
+            gr.insertVertex(analyzer['connections'], stopid)
+        return analyzer
+    except Exception as exp:
+        error.reraise(exp, 'model:addstop')
+
+
+def addConnection(analyzer, origin, destination, distance):
+    """
+    Adiciona un arco entre dos estaciones
+    """
+    edge = gr.getEdge(analyzer['connections'], origin, destination)
+    if edge is None:
+        gr.addEdge(analyzer['connections'], origin, destination, distance)
+    return analyzer
 
 # ==============================
 # Funciones de consulta
 # ==============================
 
+def connectedComponents(analyzer):
+    """
+    Calcula los componentes conectados del grafo
+    Se utiliza el algoritmo de Kosaraju
+    """
+    analyzer['components'] = scc.KosarajuSCC(analyzer['connections'])
+    return scc.connectedComponents(analyzer['components'])
+
+
+def totalConnections(analyzer):
+    """
+    Retorna el total arcos del grafo
+    """
+    return gr.numEdges(analyzer['connections'])
+
+
+def totalStops(analyzer):
+    """
+    Retorna el total de estaciones (vertices) del grafo
+    """
+    return gr.numVertices(analyzer['connections'])
+
 # ==============================
 # Funciones Helper
 # ==============================
 
+def cleanServiceDuration(lastservice, service):
+    """
+    En caso de que el archivo tenga un espacio en la
+    distancia, se reemplaza con cero.
+    """
+    if service['Duration'] == '':
+        service['Duration'] = 0
+    if lastservice['Duration'] == '':
+        lastservice['Duration'] = 0
 # ==============================
 # Funciones de Comparacion
 # ==============================
+
+def compareStopIds(stop, keyvaluestop):
+    """
+    Compara dos estaciones
+    """
+    stopcode = keyvaluestop['key']
+    if (stop == stopcode):
+        return 0
+    elif (stop > stopcode):
+        return 1
+    else:
+        return -1
