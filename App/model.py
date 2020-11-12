@@ -64,7 +64,7 @@ def newAnalyzer():
                                      comparefunction=compareStopIds)
 
         analyzer['connections'] = gr.newGraph(datastructure='ADJ_LIST',
-                                              directed=False,
+                                              directed=True,
                                               size=14000,
                                               comparefunction=compareStopIds)
         return analyzer
@@ -89,8 +89,8 @@ def addStopConnection(analyzer, lastservice):
     """
     try:
         origin = lastservice['start station id']
-        destination = formatVertex(service)
-        cleanServiceDuration(lastservice, service)
+        destination = lastservice['end station id']
+        #cleanServiceDuration(lastservice, lastservice)
         duration = int(lastservice['tripduration'])
         addStop(analyzer, origin)
         addStop(analyzer, destination)
@@ -134,6 +134,8 @@ def connectedComponents(analyzer):
     analyzer['components'] = scc.KosarajuSCC(analyzer['connections'])
     return scc.connectedComponents(analyzer['components'])
 
+def sameCC(sc, station1, station2):
+    return scc.stronglyConnected(sc, station1, station2)
 
 def totalConnections(analyzer):
     """
@@ -152,15 +154,7 @@ def totalStops(analyzer):
 # Funciones Helper
 # ==============================
 
-def cleanServiceDuration(lastservice, service):
-    """
-    En caso de que el archivo tenga un espacio en la
-    distancia, se reemplaza con cero.
-    """
-    if service['Duration'] == '':
-        service['Duration'] = 0
-    if lastservice['Duration'] == '':
-        lastservice['Duration'] = 0
+
 # ==============================
 # Funciones de Comparacion
 # ==============================

@@ -53,8 +53,8 @@ def init():
 #  de datos en los modelos
 # ___________________________________________________
 
-def loadTrips (analyzer):
-    for filename in os.listdir(cf.data_dir):
+def loadTrips (analyzer,files):
+    for filename in files:
         if filename.endswith('.csv'):
             print('Cargando archivo'+ filename)
             loadServices(analyzer,filename)

@@ -42,7 +42,8 @@ operación seleccionada.
 # ___________________________________________________
 #  Variables
 # ___________________________________________________
-servicefile = '201801-1-citibike-tripdata.csv'
+servicefile = ('201801-1-citibike-tripdata.csv','201801-2-citibike-tripdata.csv',
+            '201801-3-citibike-tripdata.csv','201801-4-citibike-tripdata.csv')
 initialStation = None
 recursionLimit = 20000
 
@@ -56,22 +57,20 @@ def printMenu():
     print("1- Inicializar Analizador")
     print("2- Cargar información de rutas de citybike")
     print("3- Calcular componentes conectados")
-    print("4- Establecer estación base:")
-    print("5- Requerimiento 1")
-    print("6- Requerimiento 2")
-    print("7- Requerimiento 3")
-    print("8- Requerimiento 5")
-    print("9- Requerimiento 6")
-    print("10- Requerimiento 7")
-    print("11- Requerimiento 8")
+    print("4- Requerimiento 2")
+    print("5- Requerimiento 3")
+    print("6- Requerimiento 5")
+    print("7- Requerimiento 6")
+    print("8- Requerimiento 7")
+    print("9- Requerimiento 8")
     
     print("0- Salir")
     print("*******************************************")
 
 
 def optionTwo():
-    print("\nCargando información de transporte de singapur ....")
-    controller.loadServices(cont, servicefile)
+    print("\nCargando información de los viajes de citibike ....")
+    controller.loadTrips(cont,servicefile)
     numedges = controller.totalConnections(cont)
     numvertex = controller.totalStops(cont)
     print('Numero de vertices: ' + str(numvertex))
@@ -102,9 +101,7 @@ while True:
     elif int(inputs[0]) == 3:
         executiontime = timeit.timeit(optionThree, number=1)
         print("Tiempo de ejecución: " + str(executiontime))
-
-    elif int(inputs[0]) == 4:
-        msg = "Estación Base: Start station id (Ej: 72): "
-        initialStation = input(msg)
-        executiontime = timeit.timeit(optionFour, number=1)
-        print("Tiempo de ejecución: " + str(executiontime))
+    else:
+        sys.exit(0)
+sys.exit(0)
+    
