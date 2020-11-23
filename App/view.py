@@ -80,8 +80,7 @@ def optionTwo():
     print('El limite de recursion se ajusta a: ' + str(recursionLimit))
 
 def optionThree():
-    print('El número de componentes conectados es: ' +
-          str(controller.connectedComponents(cont)))
+    print('El número de componentes conectados es: '+ str(controller.connectedComponents(cont)))
 
 """
 Menu principal
