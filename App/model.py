@@ -45,29 +45,35 @@ de creacion y consulta sobre las estructuras de datos.
 def newAnalyzer():
     """ Inicializa el analizador
 
-   stops: Tabla de hash para guardar los vertices del grafo
-   connections: Grafo para representar las rutas entre estaciones
+   stations: Tabla de hash para guardar los vertices del grafo
+   graph: Grafo para representar las rutas entre estaciones
    components: Almacena la informacion de los componentes conectados
    paths: Estructura que almancena los caminos de costo minimo desde un
            vertice determinado a todos los otros vértices del grafo
     """
-    try:
-        analyzer = {
-                    'stops': None,
-                    'connections': None,
-                    'components': None,
-                    'paths': None
+    analyzer = {'stationsStart': None,
+                'stationsEnd': None,
+                'graph': None,
+                'bikes':None
                     }
 
-        analyzer['stops'] = m.newMap(numelements=14000,
+    analyzer['stationsEnd'] = m.newMap(numelements=2000,
                                      maptype='PROBING',
-                                     comparefunction=compareStopIds)
+                                     comparefunction=compareStations)
 
-        analyzer['connections'] = gr.newGraph(datastructure='ADJ_LIST',
+    analyzer['stationsStart'] = m.newMap(numelements=2000,
+                                     maptype='PROBING',
+                                     comparefunction=compareStations)
+                                
+    analyzer['bikes'] = m.newMap(numelements=2000,
+                                     maptype='PROBING',
+                                     comparefunction=compareBikes)
+
+    analyzer['graph'] = gr.newGraph(datastructure='ADJ_LIST',
                                               directed=True,
-                                              size=14000,
-                                              comparefunction=compareStopIds)
-        return analyzer
+                                              size=10000,
+                                              comparefunction=compareStations)
+    return analyzer
     except Exception as exp:
         error.reraise(exp, 'model:newAnalyzer')
 
@@ -75,51 +81,147 @@ def newAnalyzer():
 
 # Funciones para agregar informacion al grafo
 
-def addStopConnection(analyzer, lastservice):
-    """
-    Adiciona las estaciones al grafo como vertices y arcos entre las
-    estaciones adyacentes.
-
-    Los vertices tienen por nombre el identificador de la estacion
-    seguido de la ruta que sirve.  Por ejemplo:
-
-    75009-10
-
-    Si la estacion sirve otra ruta, se tiene: 75009-101
-    """
+def addNewTrip(analyzer, service):
+    
+    
     try:
-        origin = lastservice['start station id']
-        destination = lastservice['end station id']
-        #cleanServiceDuration(lastservice, lastservice)
-        duration = int(lastservice['tripduration'])
-        addStop(analyzer, origin)
-        addStop(analyzer, destination)
-        addConnection(analyzer, origin, destination, duration)
-        """addRouteStop(analyzer, service)
-        addRouteStop(analyzer, lastservice)"""
+        origen = service["start station id"]
+        destino = service["end station id"]
+        duracion = int(service["tripduration"])
+
+        addStop(analyzer, origen)
+        addStop(analyzer, destino)
+
+        addConnection(analyzer, origen, destino, duracion)
+
+        addTripEnd(analyzer, service)
+        addTripStart(analyzer, service)
         return analyzer
     except Exception as exp:
         error.reraise(exp, 'model:addStopConnection')
 
-def addStop(analyzer, stopid):
+def addBike(analyzer, service):
+    entry = m.get(analyzer['bikes'], service["bikeid"])
+    if entry is None:
+        infoBike={"cuantosViajes":1, "id":service["bikeid"],"tiempoUso": int(service["tripduration"]) , "viajes": lt.newList("ARRAY_LIST", cmpfunction=compareTrips) }
+        lt.addLast(infoBike["viajes"], service)
+        m.put(analyzer['bikes'], service["bikeid"], infoBike)
+    else:
+        infoBike = entry['value']
+        if infoBike["id"]==service["bikeid"]:
+            infoBike["cuantosViajes"]+=1
+            infoBike["tiempoUso"]+= int(service["tripduration"])
+            lt.addLast(infoBike["viajes"],service)
+
+def addStop(analyzer, estacion):
     """
     Adiciona una estación como un vertice del grafo
     """
     try:
-        if not gr.containsVertex(analyzer['connections'], stopid):
-            gr.insertVertex(analyzer['connections'], stopid)
+        if not gr.containsVertex(analyzer['connections'], estacion):
+            gr.insertVertex(analyzer['graph'], estacion)
         return analyzer
+
     except Exception as exp:
         error.reraise(exp, 'model:addstop')
 
+def addTripStart(analyzer, service):
+    entry = m.get(analyzer['stationsStart'], service["start station id"])
+    if entry is None:
+        edades = {"0-10":0, "11-20":0, "21-30":0, "31-40":0, "41-50":0, "51-60":0, "60+":0}
+        infoViaje={"cuantosViajes":1, "nombre":service["start station name"], "latitud":service["start station latitude"], 
+            "longitud":service["start station longitude"],"edades": edades, "viajes": lt.newList("ARRAY_LIST", cmpfunction=compareTrips) }
+        lt.addLast(infoViaje["viajes"],service)
+        if 2020-int(service["birth year"]) >=0 and 2020-int(service["birth year"]) <= 10:
+            infoViaje["edades"]["0-10"] += 1
+        elif 2020-int(service["birth year"]) >=11 and 2020-int(service["birth year"]) <= 20:
+            infoViaje["edades"]["11-20"] += 1
+        elif 2020-int(service["birth year"]) >=21 and 2020-int(service["birth year"]) <= 30:
+            infoViaje["edades"]["21-30"] += 1
+        elif 2020-int(service["birth year"]) >=31 and 2020-int(service["birth year"]) <= 40:
+            infoViaje["edades"]["31-40"] += 1
+        elif 2020-int(service["birth year"]) >=41 and 2020-int(service["birth year"]) <= 50:
+            infoViaje["edades"]["41-50"] += 1
+        elif 2020-int(service["birth year"]) >=51 and 2020-int(service["birth year"]) <= 60:
+            infoViaje["edades"]["51-60"] += 1
+        elif 2020-int(route["birth year"]) >60:
+            infoViaje["edades"]["60+"] += 1
+        m.put(analyzer['stationsStart'], service["start station id"], infoViaje)
+    else:
+        infoViaje = entry['value']
+        if entry['key']==service['start station id']:
+            infoViaje["cuantosViajes"]+=1
+            lt.addLast(infoViaje["viajes"],service)
+            if 2020-int(service["birth year"]) >=0 and 2020-int(service["birth year"]) <= 10:
+                infoViaje["edades"]["0-10"] += 1
+            elif 2020-int(service["birth year"]) >=11 and 2020-int(service["birth year"]) <= 20:
+                infoViaje["edades"]["11-20"] += 1
+            elif 2020-int(service["birth year"]) >=21 and 2020-int(service["birth year"]) <= 30:
+                infoViaje["edades"]["21-30"] += 1
+            elif 2020-int(service["birth year"]) >=31 and 2020-int(service["birth year"]) <= 40:
+                infoViaje["edades"]["31-40"] += 1
+            elif 2020-int(service["birth year"]) >=41 and 2020-int(service["birth year"]) <= 50:
+                infoViaje["edades"]["41-50"] += 1
+            elif 2020-int(service["birth year"]) >=51 and 2020-int(service["birth year"]) <= 60:
+                infoViaje["edades"]["51-60"] += 1
+            elif 2020-int(route["birth year"]) >60:
+                infoViaje["edades"]["60+"] += 1
+
+    return analyzer
+
+def addTripEnd(analyzer, service):
+    entry = m.get(analyzer['stationsEnd'], service["end station id"])
+    if entry is None:
+        edades = {"0-10":0, "11-20":0, "21-30":0, "31-40":0, "41-50":0, "51-60":0, "60+":0}
+        infoViaje={"cuantosViajes":1, "nombre":service["end station name"], "latitud":service["end station latitude"], 
+            "longitud":service["end station longitude"],"edades": edades, "viajes": lt.newList("ARRAY_LIST", cmpfunction=compareTrips) }
+        lt.addLast(infoViaje["viajes"],service)
+        if 2020-int(service["birth year"]) >=0 and 2020-int(service["birth year"]) <= 10:
+            infoViaje["edades"]["0-10"] += 1
+        elif 2020-int(service["birth year"]) >=11 and 2020-int(service["birth year"]) <= 20:
+            infoViaje["edades"]["11-20"] += 1
+        elif 2020-int(service["birth year"]) >=21 and 2020-int(service["birth year"]) <= 30:
+            infoViaje["edades"]["21-30"] += 1
+        elif 2020-int(service["birth year"]) >=31 and 2020-int(service["birth year"]) <= 40:
+            infoViaje["edades"]["31-40"] += 1
+        elif 2020-int(service["birth year"]) >=41 and 2020-int(service["birth year"]) <= 50:
+            infoViaje["edades"]["41-50"] += 1
+        elif 2020-int(service["birth year"]) >=51 and 2020-int(service["birth year"]) <= 60:
+            infoViaje["edades"]["51-60"] += 1
+        elif 2020-int(route["birth year"]) >60:
+            infoViaje["edades"]["60+"] += 1
+        m.put(analyzer['stationsEnd'], service["end station id"], infoViaje)
+    else:
+        infoViaje = entry['value']
+        if entry['key']==service["end station id"]:
+            infoViaje["cuantosViajes"]+=1
+            lt.addLast(infoViaje["viajes"],service)
+            if 2020-int(service["birth year"]) >=0 and 2020-int(service["birth year"]) <= 10:
+                infoViaje["edades"]["0-10"] += 1
+            elif 2020-int(service["birth year"]) >=11 and 2020-int(service["birth year"]) <= 20:
+                infoViaje["edades"]["11-20"] += 1
+            elif 2020-int(service["birth year"]) >=21 and 2020-int(service["birth year"]) <= 30:
+                infoViaje["edades"]["21-30"] += 1
+            elif 2020-int(service["birth year"]) >=31 and 2020-int(service["birth year"]) <= 40:
+                infoViaje["edades"]["31-40"] += 1
+            elif 2020-int(service["birth year"]) >=41 and 2020-int(service["birth year"]) <= 50:
+                infoViaje["edades"]["41-50"] += 1
+            elif 2020-int(service["birth year"]) >=51 and 2020-int(service["birth year"]) <= 60:
+                infoViaje["edades"]["51-60"] += 1
+            elif 2020-int(route["birth year"]) >60:
+                infoViaje["edades"]["60+"] += 1
+
+    return analyzer
 
 def addConnection(analyzer, origin, destination, distance):
     """
     Adiciona un arco entre dos estaciones
     """
-    edge = gr.getEdge(analyzer['connections'], origin, destination)
+    edge = gr.getEdge(analyzer["graph"], origin, destination)
     if edge is None:
-        gr.addEdge(analyzer['connections'], origin, destination, distance)
+        gr.addEdge(analyzer["graph"], origin, destination, duration)
+    else:
+        ed.updateAverageWeight(edge, duration) 
     return analyzer
 
 # ==============================
@@ -159,7 +261,7 @@ def totalStops(analyzer):
 # Funciones de Comparacion
 # ==============================
 
-def compareStopIds(stop, keyvaluestop):
+def compareStations(stop, keyvaluestop):
     """
     Compara dos estaciones
     """
@@ -167,6 +269,14 @@ def compareStopIds(stop, keyvaluestop):
     if (stop == stopcode):
         return 0
     elif (stop > stopcode):
+        return 1
+    else:
+        return -1
+
+def compareTrips(trip1, trip2):
+    if (trip1 == trip2):
+        return 0
+    elif (trip1 > trip2):
         return 1
     else:
         return -1
