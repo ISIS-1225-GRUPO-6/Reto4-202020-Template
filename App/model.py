@@ -34,6 +34,7 @@ from math import radians, cos, sin, asin, sqrt
 from DISClib.Utils import error as error
 from DISClib.Algorithms.Graphs import bfs
 import datetime
+from datetime import date
 from DISClib.ADT import stack
 assert config
 
@@ -123,13 +124,13 @@ def addBike(analyzer, service):
 
 def uptadeDate(map,service):
     date = service["starttime"]
-    serviceDate = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+    serviceDate = datetime.datetime.strptime( date, '%Y-%m-%d %H:%M:%S.%f')
     entry = m.get(map, serviceDate.date())
     if entry is None:
         dia = {"tiempouso":0 , "viajes": lt.newList("ARRAY_LIST", cmpfunction=compareTrips)}
         m.put(map ,serviceDate.date(), dia)  
     else:
-        dia = me.getValue(entry)
+        dia = entry['value']
     
     lt.addLast(dia["viajes"], service)
     dia["tiempouso"]+=int(service["tripduration"])
@@ -488,7 +489,7 @@ def rutasPorEdad(analyzer, edad):
         primero = primero['next']
         siguiente = siguiente['next']
     if ultimo is not None:
-        info=m.get(analyzer['stationsStart'],ultimo['info'])['value']
+        info = m.get(analyzer['stationsEnd'],ultimo['info'])['value']
         print(str(pasos)+". "+ info["nombre"])
     print("el tiempo estimado es: "+ str(tiempo))
 
@@ -551,7 +552,7 @@ def cercanas(analyzer, lon1,lat1,lon2,lat2):
             primero = primero['next']
             siguiente = siguiente['next']
         if ultimo is not None:
-            info=m.get(analyzer['stationsStart'],ultimo['info'])['value']
+            info=m.get(analyzer['stationsEnd'],ultimo['info'])['value']
             print(str(pasos)+". "+ info["nombre"])
         print("el tiempo estimado es: "+ str(tiempo))
 
@@ -640,7 +641,7 @@ def mantenimiento(analyzer, idbike, fecha):
     info= m.get(analyzer['bikes'],idbike)['value']
     if info is not None:
         dia = datetime.datetime.strptime(fecha, '%Y-%m-%d')
-        info2= m.get(info["fecha"], dia)
+        info2= m.get(info["fecha"], dia.date())['value']
         tiempototaluso= int(info2["tiempouso"])
         tiempoestacionada = ((60*24)-tiempototaluso)
         viajes=[info2["viajes"]]
@@ -649,8 +650,6 @@ def mantenimiento(analyzer, idbike, fecha):
         for viaje in viajes:
             print(str(cual)+". "+ viaje["start station name"] )
             cual+=1
-
-
 
 # ==============================
 # Funciones Helper
@@ -708,9 +707,9 @@ def compareBikes(bike1, bike2):
 
 def compareDates(date1, date2):
 
-    if (date1 == date2):
+    if (date1 == date2['key']):
         return 0
-    elif (date1 > date2):
+    elif (date1 > date2['key']):
         return 1
     else: 
         return -1

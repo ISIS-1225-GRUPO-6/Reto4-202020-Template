@@ -61,7 +61,7 @@ def printMenu():
     print("7- recomendar rutas por edad")
     print("8- ruta de interes turistico")
     print("9- publicidad")
-    print("100- mantenimiento")
+    print("10- mantenimiento")
     
     print("0- Salir")
     print("*******************************************")
@@ -97,8 +97,16 @@ def optionThree():
     print('El número de componentes conectados es: ' +
           str(controller.connectedComponents(cont)))
 
+def optionfour():
+    print("hola")
+
+
+
 def optionfive():
     controller.estaciones(cont)
+
+def optionsix():
+    print("hola")
 
 def optionseven():
     print( "1. 0-10 \n2. 11-20 \n3. 21-30 \n4. 31-40 \n5. 41-50 \n6. 51-60 \n7. 60+")
@@ -143,8 +151,16 @@ while True:
         executiontime = timeit.timeit(optionThree, number=1)
         print("Tiempo de ejecución: " + str(executiontime))
 
+    elif int(inputs[0]) == 4:
+        executiontime = timeit.timeit(optionfour, number=1)
+        print("Tiempo de ejecución: " + str(executiontime))
+
     elif int(inputs[0]) == 5:
         executiontime = timeit.timeit(optionfive, number=1)
+        print("Tiempo de ejecución: " + str(executiontime))
+
+    elif int(inputs[0]) == 6:
+        executiontime = timeit.timeit(optionsix, number=1)
         print("Tiempo de ejecución: " + str(executiontime))
     
     elif int(inputs[0]) == 7:
