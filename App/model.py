@@ -326,7 +326,7 @@ def rutaCircular(analyzer, estacion, tiempoin, tiempofin):
             tmf = int(tiempofin)*60
             while (not stack.isEmpty(lista1)):
                 parada = stack.pop(lista1)
-                if parada['last'] >= tmi and parada['last'] <= tmf: 
+                if float(parada['last']['info']) >= tmi and float(parada['last']['info']) <= tmf: 
                     lt.addLast(listafinal, parada)     
         print("la cantidad de rutas es : "+ str(listafinal['size']))
         for i in range( listafinal['size'] ):
@@ -335,7 +335,7 @@ def rutaCircular(analyzer, estacion, tiempoin, tiempofin):
             for j in range(actual['size']-1):
                 info= m.get(analyzer['stationsStart'], lt.getElement(actual,j))
                 print(str(j+1)+". " + info["nombre"])
-            print("con una duracion estimada de: "+str(actual['last']/60)+" minutos")   
+            print("con una duracion estimada de: "+str(int(actual['last']['info'])/60)+" minutos")   
 
 def rutaresistencia(analyzer, estacion, tiempo):
     
@@ -348,8 +348,8 @@ def rutaresistencia(analyzer, estacion, tiempo):
             fcc = sameCC(analyzer, estacion, adyacente)
             if fcc:
                 tiempo=0
-                analyzer['paths'] = dfs.DepthFirstSearch(analyzer["graph"], adyacente)
-                caminos = dfs.pathTo(analyzer["paths"], estacion)
+                analyzer['paths'] = bfs.BreadhtFisrtSearch(analyzer["graph"], adyacente)
+                caminos = bfs.pathTo(analyzer["paths"], estacion)
                 primero= caminos['first']
                 siguiente = primero['next']
                 for i in range(caminos['size']-1):
@@ -369,7 +369,7 @@ def rutaresistencia(analyzer, estacion, tiempo):
             tmi = int(tiempo)*60
             while (not stack.isEmpty(lista1)):
                 parada = stack.pop(lista1)
-                if parada['last'] <= tmi : 
+                if parada['last']['info'] <= tmi : 
                     lt.addLast(listafinal, parada)     
         print("la cantidad de rutas es : "+ str(listafinal['size']))
         for i in range( listafinal['size'] ):
@@ -378,7 +378,7 @@ def rutaresistencia(analyzer, estacion, tiempo):
             for j in range(actual['size']-1):
                 info= m.get(analyzer['stationsStart'], lt.getElement(actual,j))
                 print(str(j+1)+". " + info["nombre"])
-            print("con una duracion estimada de: "+str(actual['last']/60)+" minutos")   
+            print("con una duracion estimada de: "+str(int(actual['last']['info'])/60)+" minutos")   
 
 def estaciones(analyzer):
     "requerimiento 3"
