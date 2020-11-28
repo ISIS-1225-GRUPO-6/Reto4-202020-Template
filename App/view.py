@@ -57,7 +57,7 @@ def printMenu():
     print("3- Calcular componentes conectados")
     print("4- Ruta circular")
     print("5- Informacion estaciones")
-    print("6- Requerimiento 4")
+    print("6- ruta resistencia")
     print("7- recomendar rutas por edad")
     print("8- ruta de interes turistico")
     print("9- publicidad")
