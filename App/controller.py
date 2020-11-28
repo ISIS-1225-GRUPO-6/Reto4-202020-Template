@@ -27,6 +27,7 @@
 import config as cf
 from App import model
 import csv
+import os
 
 """
 El controlador se encarga de mediar entre la vista y el modelo.
@@ -53,12 +54,13 @@ def init():
 #  de datos en los modelos
 # ___________________________________________________
 
-def loadTrips (analyzer,files):
-    for filename in files:
+def loadTrips (analyzer):
+    for filename in os.listdir(cf.data_dir):
         if filename.endswith('.csv'):
-            print('Cargando archivo'+ filename)
-            loadServices(analyzer,filename)
+            print('Cargando archivo: ' + filename)
+            loadServices(analyzer, filename)
     return analyzer
+
 
 def loadServices(analyzer, servicesfile):
     """
@@ -71,9 +73,8 @@ def loadServices(analyzer, servicesfile):
     servicesfile = cf.data_dir + servicesfile
     input_file = csv.DictReader(open(servicesfile, encoding="utf-8"),
                                 delimiter=",")
-    #lastservice = None
     for lastservice in input_file:
-        model.addStopConnection(analyzer, lastservice)
+        model.addNewTrip(analyzer, lastservice)
         
     return analyzer
 
@@ -102,3 +103,9 @@ def connectedComponents(analyzer):
     Numero de componentes fuertemente conectados
     """
     return model.connectedComponents(analyzer)
+
+def estaciones(analyzer):
+    model.estaciones(analyzer)
+
+def rutasEdad(analyzer, edad):
+    model.rutasPorEdad(analyzer,edad)

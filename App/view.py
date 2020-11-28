@@ -42,8 +42,6 @@ operación seleccionada.
 # ___________________________________________________
 #  Variables
 # ___________________________________________________
-servicefile = ('201801-1-citibike-tripdata.csv','201801-2-citibike-tripdata.csv',
-            '201801-3-citibike-tripdata.csv','201801-4-citibike-tripdata.csv')
 initialStation = None
 recursionLimit = 20000
 
@@ -58,19 +56,35 @@ def printMenu():
     print("2- Cargar información de rutas de citybike")
     print("3- Calcular componentes conectados")
     print("4- Requerimiento 2")
-    print("5- Requerimiento 3")
-    print("6- Requerimiento 5")
-    print("7- Requerimiento 6")
-    print("8- Requerimiento 7")
-    print("9- Requerimiento 8")
+    print("5- Informacion estaciones")
+    print("6- Requerimiento 4")
+    print("7- recomendar rutas por edad")
+    print("8- Requerimiento 6")
+    print("9- Requerimiento 7")
+    print("10- Requerimiento 8")
     
     print("0- Salir")
     print("*******************************************")
 
+def seledad(resp):
+    if resp==1:
+        return '"0-10"'
+    elif resp==2:
+        return '"11-20"'
+    elif resp==3:
+        return '"21-30"'
+    elif resp==4:
+        return '"31-40"'
+    elif resp==5:
+        return '"41-50"'
+    elif resp==6:
+        return '"51-60"'
+    if resp==7:
+        return '"60+"'
 
 def optionTwo():
     print("\nCargando información de los viajes de citibike ....")
-    controller.loadTrips(cont,servicefile)
+    controller.loadTrips(cont)
     numedges = controller.totalConnections(cont)
     numvertex = controller.totalStops(cont)
     print('Numero de vertices: ' + str(numvertex))
@@ -82,6 +96,15 @@ def optionTwo():
 def optionThree():
     print('El número de componentes conectados es: ' +
           str(controller.connectedComponents(cont)))
+
+def optionfive():
+    controller.estaciones(cont)
+def optionseven():
+    print( "1. 0-10 \n2. 11-20 \n3. 21-30 \n4. 31-40 \n5. 41-50 \n6. 51-60 \n7. 60+")
+    resp = input('seleccion edad\n')
+    cual = seledad(resp)
+    controller.rutasEdad(cont, cual)
+
 
 """
 Menu principal
@@ -101,7 +124,18 @@ while True:
     elif int(inputs[0]) == 3:
         executiontime = timeit.timeit(optionThree, number=1)
         print("Tiempo de ejecución: " + str(executiontime))
+
+    elif int(inputs[0]) == 5:
+        executiontime = timeit.timeit(optionfive, number=1)
+        print("Tiempo de ejecución: " + str(executiontime))
+    
+    elif int(inputs[0]) == 7:
+        executiontime = timeit.timeit(optionseven, number=1)
+        print("Tiempo de ejecución: " + str(executiontime))
+
     else:
         sys.exit(0)
 sys.exit(0)
     
+
+
