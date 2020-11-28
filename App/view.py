@@ -59,9 +59,9 @@ def printMenu():
     print("5- Informacion estaciones")
     print("6- Requerimiento 4")
     print("7- recomendar rutas por edad")
-    print("8- Requerimiento 6")
-    print("9- Requerimiento 7")
-    print("10- Requerimiento 8")
+    print("8- ruta de interes turistico")
+    print("9- publicidad")
+    print("100- mantenimiento")
     
     print("0- Salir")
     print("*******************************************")
@@ -99,12 +99,30 @@ def optionThree():
 
 def optionfive():
     controller.estaciones(cont)
+
 def optionseven():
     print( "1. 0-10 \n2. 11-20 \n3. 21-30 \n4. 31-40 \n5. 41-50 \n6. 51-60 \n7. 60+")
     resp = input('seleccion edad\n')
     cual = seledad(resp)
     controller.rutasEdad(cont, cual)
 
+def optioneight():
+    latin=input("ingrese la latitud inicial\n")
+    lonin=input("ingrese la longitud inicial\n")
+    latfin=input("ingrese la latitud del sitio turistico a visitar\n")
+    lonfin=input("ingrese la longitud del sitio turistico a visitar\n")
+    controller.cercanas(cont,lonin,latin,lonfin,latfin)
+
+def optionnine():
+    print( "1. 0-10 \n2. 11-20 \n3. 21-30 \n4. 31-40 \n5. 41-50 \n6. 51-60 \n7. 60+")
+    resp = input('seleccion edad\n')
+    cual = seledad(resp)
+    controller.publicidad(cont,cual)
+
+def optionten():
+    bikeid=input("ingrese bike id")
+    fecha = input("ingrese fecha y-m-d")
+    controller.mantenimiento(cont,bikeid,fecha)
 
 """
 Menu principal
@@ -113,7 +131,7 @@ while True:
     printMenu()
     inputs = input('Seleccione una opción para continuar\n>')
 
-    if int(inputs[0]) == 1:
+    if int(inputs) == 1:
         print("\nInicializando....")
         cont = controller.init()
 
@@ -131,6 +149,18 @@ while True:
     
     elif int(inputs[0]) == 7:
         executiontime = timeit.timeit(optionseven, number=1)
+        print("Tiempo de ejecución: " + str(executiontime))
+
+    elif int(inputs[0]) == 8:
+        executiontime = timeit.timeit(optioneight, number=1)
+        print("Tiempo de ejecución: " + str(executiontime))
+
+    elif int(inputs[0]) == 9:
+        executiontime = timeit.timeit(optionnine, number=1)
+        print("Tiempo de ejecución: " + str(executiontime))
+    
+    elif int(inputs) == 10:
+        executiontime = timeit.timeit(optionten, number=1)
         print("Tiempo de ejecución: " + str(executiontime))
 
     else:

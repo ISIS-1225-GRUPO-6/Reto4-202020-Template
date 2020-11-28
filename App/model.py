@@ -30,8 +30,10 @@ from DISClib.ADT import list as lt
 from DISClib.DataStructures import listiterator as it
 from DISClib.Algorithms.Graphs import scc
 from DISClib.Algorithms.Graphs import dijsktra as djk
+from math import radians, cos, sin, asin, sqrt
 from DISClib.Utils import error as error
 from DISClib.Algorithms.Graphs import bfs
+import datetime
 from DISClib.ADT import stack
 assert config
 
@@ -107,7 +109,8 @@ def addNewTrip(analyzer, service):
 def addBike(analyzer, service):
     entry = m.get(analyzer['bikes'], service["bikeid"])
     if entry is None:
-        infoBike={"cuantosViajes":1, "id":service["bikeid"],"tiempoUso": int(service["tripduration"]) , "viajes": lt.newList("ARRAY_LIST", cmpfunction=compareTrips) }
+        infoBike={"cuantosViajes":1, "id":service["bikeid"], "tiempoUso": int(service["tripduration"]) , "viajes": lt.newList("ARRAY_LIST", cmpfunction=compareTrips), "fecha": m.newMap(numelements=2000, maptype='PROBING', comparefunction=compareDates) }
+        uptadeDate(infoBike["fecha"],service)
         lt.addLast(infoBike["viajes"], service)
         m.put(analyzer['bikes'], service["bikeid"], infoBike)
     else:
@@ -116,6 +119,21 @@ def addBike(analyzer, service):
             infoBike["cuantosViajes"]+=1
             infoBike["tiempoUso"]+= int(service["tripduration"])
             lt.addLast(infoBike["viajes"],service)
+            uptadeDate(infoBike["fecha"],service)
+
+def uptadeDate(map,service):
+    date = service["starttime"]
+    serviceDate = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+    entry = m.get(map, serviceDate.date())
+    if entry is None:
+        dia = {"tiempouso":0 , "viajes": lt.newList("ARRAY_LIST", cmpfunction=compareTrips)}
+        m.put(map ,serviceDate.date(), dia)  
+    else:
+        dia = me.getValue(entry)
+    
+    lt.addLast(dia["viajes"], service)
+    dia["tiempouso"]+=int(service["tripduration"])
+    return map
 
 def addStop(analyzer, estacion):
     """
@@ -134,8 +152,10 @@ def addTripStart(analyzer, service):
     if entry is None:
         edades = {"0-10":0, "11-20":0, "21-30":0, "31-40":0, "41-50":0, "51-60":0, "60+":0}
         infoViaje={"id": service["start station id"] ,"cuantosViajes":1, "nombre":service["start station name"], "latitud":service["start station latitude"], 
-            "longitud":service["start station longitude"],"edades": edades, "viajes": lt.newList("ARRAY_LIST", cmpfunction=compareTrips) }
+            "longitud":service["start station longitude"],"edades": edades, "viajes": lt.newList("ARRAY_LIST", cmpfunction=compareTrips) ,"subs":0}
         lt.addLast(infoViaje["viajes"],service)
+        if(service["usertype"]=="Subscriber"):
+            infoViaje["subs"]+=1
         if 2020-int(service["birth year"]) >=0 and 2020-int(service["birth year"]) <= 10:
             infoViaje["edades"]["0-10"] += 1
         elif 2020-int(service["birth year"]) >=11 and 2020-int(service["birth year"]) <= 20:
@@ -156,6 +176,8 @@ def addTripStart(analyzer, service):
         if entry['key']==service['start station id']:
             infoViaje["cuantosViajes"]+=1
             lt.addLast(infoViaje["viajes"],service)
+            if(service["usertype"]=="Subscriber"):
+                infoViaje["subs"]+=1
             if 2020-int(service["birth year"]) >=0 and 2020-int(service["birth year"]) <= 10:
                 infoViaje["edades"]["0-10"] += 1
             elif 2020-int(service["birth year"]) >=11 and 2020-int(service["birth year"]) <= 20:
@@ -178,8 +200,10 @@ def addTripEnd(analyzer, service):
     if entry is None:
         edades = {"0-10":0, "11-20":0, "21-30":0, "31-40":0, "41-50":0, "51-60":0, "60+":0}
         infoViaje={"id": service["end station id"], "cuantosViajes":1, "nombre":service["end station name"], "latitud":service["end station latitude"], 
-            "longitud":service["end station longitude"],"edades": edades, "viajes": lt.newList("ARRAY_LIST", cmpfunction=compareTrips) }
+            "longitud":service["end station longitude"],"edades": edades, "viajes": lt.newList("ARRAY_LIST", cmpfunction=compareTrips),"subs":0 }
         lt.addLast(infoViaje["viajes"],service)
+        if(service["usertype"]=="Subscriber"):
+            infoViaje["subs"]+=1
         if 2020-int(service["birth year"]) >=0 and 2020-int(service["birth year"]) <= 10:
             infoViaje["edades"]["0-10"] += 1
         elif 2020-int(service["birth year"]) >=11 and 2020-int(service["birth year"]) <= 20:
@@ -200,6 +224,8 @@ def addTripEnd(analyzer, service):
         if entry['key']==service["end station id"]:
             infoViaje["cuantosViajes"]+=1
             lt.addLast(infoViaje["viajes"],service)
+            if(service["usertype"]=="Subscriber"):
+                infoViaje["subs"]+=1
             if 2020-int(service["birth year"]) >=0 and 2020-int(service["birth year"]) <= 10:
                 infoViaje["edades"]["0-10"] += 1
             elif 2020-int(service["birth year"]) >=11 and 2020-int(service["birth year"]) <= 20:
@@ -443,25 +469,27 @@ def rutasPorEdad(analyzer, edad):
     
     analyzer['paths'] = bfs.BreadhtFisrtSearch(analyzer['graph'], ninicio)
     caminos = bfs.pathTo(analyzer['paths'], nfinal)
-    lt.addFirst(caminos,ninicio)
-    lt.addLast(caminos,nfinal)
     pasos=1
     tiempo=0
+    print(caminos['size'])
     primero= caminos['first']
     siguiente = primero['next']
-    for i in range(caminos['size']):
+    ultimo=caminos['last']
+    for i in range(caminos['size']-1):
         infoin = primero['info']
         if siguiente is not None:
             infoul = siguiente['info']
-            print(infoin+ ","+infoul)
             arco = gr.getEdge(analyzer["graph"], infoin, infoul)
-            tiempo += float(arco["weight"])
+            if arco is not None:
+                tiempo += float(arco["weight"])
         info=m.get(analyzer['stationsStart'],infoin)['value']
         print(str(pasos)+". "+ info["nombre"])
         pasos+=1
         primero = primero['next']
         siguiente = siguiente['next']
-        
+    if ultimo is not None:
+        info=m.get(analyzer['stationsStart'],ultimo['info'])['value']
+        print(str(pasos)+". "+ info["nombre"])
     print("el tiempo estimado es: "+ str(tiempo))
 
 def cercanas(analyzer, lon1,lat1,lon2,lat2):
@@ -472,10 +500,10 @@ def cercanas(analyzer, lon1,lat1,lon2,lat2):
     ninicio=""
     while(it.hasNext(ite)):
         info=it.next(ite)
-        actual=m.get(analyzer['stationsStart'],info)['value']
+        actual = m.get(analyzer['stationsStart'],info)['value']
         latitud = float(actual["latitud"])
         longitud= float(actual["longitud"])
-        distancia= haversine(lon1,lat1,longitud,latitud)
+        distancia= haversine(float(lon1),float(lat1),longitud,latitud)
         if distancia < menor:
             menor=distancia
             inicio=info
@@ -485,16 +513,16 @@ def cercanas(analyzer, lon1,lat1,lon2,lat2):
 
     llaves1 = m.keySet(analyzer['stationsEnd'])
     ite1 = it.newIterator(llaves1)
-    menor1=1000
+    menor1=1000000000
     final=''
     nfinal=""
     while(it.hasNext(ite1)):
         info=it.next(ite1)
         actual=m.get(analyzer['stationsEnd'],info)['value']
         latitud = float(actual["latitud"])
-        longitud= float(actual["longitud"])
-        distancia= haversine(lon1,lat1,longitud,latitud)
-        if distancia < menor:
+        longitud = float(actual["longitud"])
+        distancia = haversine(float(lon2),float(lat2),longitud,latitud)
+        if distancia < menor1:
             menor1=distancia
             final=info
             nfinal = actual["nombre"]
@@ -502,28 +530,125 @@ def cercanas(analyzer, lon1,lat1,lon2,lat2):
 
     analyzer['paths'] = bfs.BreadhtFisrtSearch(analyzer['graph'], inicio)
     caminos = bfs.pathTo(analyzer['paths'], final)
-    lt.addFirst(caminos,inicio)
-    lt.addLast(caminos,final)
     pasos=1
+    print(caminos['size'])
+
     tiempo=0
-    iterator = it.newIterator(caminos)
-    while(it.hasNext(iterator)):
-        
-        infoin = it.next(iterator)
-        if it.hasNext(iterator):
-            infoul = it.next(iterator)
-            print(infoin+ ","+infoul)
-            arco = gr.getEdge(analyzer["graph"], infoin, infoul)
-            tiempo += float(arco["weight"])
+    if caminos is not None:
+        primero= caminos['first']
+        siguiente = primero['next']
+        ultimo=caminos['last']
+        for i in range(caminos['size']-1):
+            infoin = primero['info']
+            if siguiente is not None:
+                infoul = siguiente['info']
+                arco = gr.getEdge(analyzer["graph"], infoin, infoul)
+                if arco is not None:
+                    tiempo += float(arco["weight"])
+            info=m.get(analyzer['stationsStart'],infoin)['value']
+            print(str(pasos)+". "+ info["nombre"])
+            pasos+=1
+            primero = primero['next']
+            siguiente = siguiente['next']
+        if ultimo is not None:
+            info=m.get(analyzer['stationsStart'],ultimo['info'])['value']
+            print(str(pasos)+". "+ info["nombre"])
+        print("el tiempo estimado es: "+ str(tiempo))
 
-        info=m.get(analyzer['stationsStart'],infoin)['value']
-        print(str(pasos)+". "+ info["nombre"])
-        pasos+=1
-    print("el tiempo estimado es: "+ str(tiempo))
+def publicidad(analyzer, edad):
+    cuantosinicio=0
+    ninicio=""
+    cuantosviin=0
+
+    cuantosopc=0
+    opcional=""
+    cuantosviinop=0
+
+    cuantosfinal=0
+    nfinal=""
+    cuantosvifin=0
+
+    cuantosopc1=0
+    opcional1=""
+    cuantosvifinop=0
 
 
-        
+    llaves = m.keySet(analyzer['stationsStart'])
+    ite = it.newIterator(llaves)
+    while(it.hasNext(ite)):
+        info=it.next(ite)
+        actual=m.get(analyzer['stationsStart'],info)['value']
+        nocuantos=0
+        cuantossub= int(actual["subs"])
+        if edad=="0-10":
+            nocuantos = actual["edades"]["0-10"]
+        elif edad=="11-20":
+            nocuantos = actual["edades"]["11-20"]
+        elif edad=="21-30":
+            nocuantos = actual["edades"]["21-30"]
+        elif edad=="31-40":
+            nocuantos = actual["edades"]["31-40"]
+        elif edad=="41-50":
+            nocuantos = actual["edades"]["41-50"]
+        elif edad=="51-60":
+            nocuantos = actual["edades"]["51-60"]
+        elif edad=="60+":
+            nocuantos = actual["edades"]["60+"]
 
+        if (nocuantos+cuantossub) > cuantosinicio :
+            cuantosopc= cuantosinicio
+            opcional=ninicio
+            cuantosviinop = cuantosviin
+            cuantosinicio = (nocuantos+cuantossub)
+            ninicio = actual["nombre"]
+            cuantosviin = actual["cuantosViajes"]
+
+    llaves1 = m.keySet(analyzer['stationsEnd'])
+    ite1 = it.newIterator(llaves1)
+    while(it.hasNext(ite1)):
+        info=it.next(ite1)
+        actual=m.get(analyzer['stationsEnd'],info)['value']
+        nocuantos=0
+        cuantossub= int(actual["subs"])
+        if edad=="0-10":
+            nocuantos = actual["edades"]["0-10"]
+        elif edad=="11-20":
+            nocuantos = actual["edades"]["11-20"]
+        elif edad=="21-30":
+            nocuantos = actual["edades"]["21-30"]
+        elif edad=="31-40":
+            nocuantos = actual["edades"]["31-40"]
+        elif edad=="41-50":
+            nocuantos = actual["edades"]["41-50"]
+        elif edad=="51-60":
+            nocuantos = actual["edades"]["51-60"]
+        elif edad=="60+":
+            nocuantos = actual["edades"]["60+"]
+        if (nocuantos+cuantossub) > cuantosfinal :
+            cuantosopc1= cuantosfinal
+            opcional1=nfinal
+            cuantosvifinop = cuantosvifin
+            cuantosfinal = (nocuantos+cuantossub)
+            nfinal = actual["nombre"]
+            cuantosvifin = actual["cuantosViajes"]
+
+    pareja1 = ("la estacion identificada es:\n inicio en:" + ninicio + "con : "+ str(cuantosviin)+" viajes registrados\n, y con su estacion de llegada : "+nfinal+" con : "+str(cuantosvifin)+" viajes registrados" )
+    pareja2 = ("\nopcional la estacion identificada es:\n inicio en:" + opcional + "con : "+ str(cuantosviinop)+" viajes registrados\n, y con su estacion de llegada : "+opcional1+" con : "+str(cuantosvifinop)+" viajes registrados" )
+    print(pareja1+pareja2)
+
+def mantenimiento(analyzer, idbike, fecha):
+    info= m.get(analyzer['bikes'],idbike)['value']
+    if info is not None:
+        dia = datetime.datetime.strptime(fecha, '%Y-%m-%d')
+        info2= m.get(info["fecha"], dia)
+        tiempototaluso= int(info2["tiempouso"])
+        tiempoestacionada = ((60*24)-tiempototaluso)
+        viajes=[info2["viajes"]]
+        print("el tiempo de uso es : "+ str(tiempototaluso)+", y el tiempo estacionada es: "+ str(tiempoestacionada)+", minutos")
+        cual=0
+        for viaje in viajes:
+            print(str(cual)+". "+ viaje["start station name"] )
+            cual+=1
 
 
 
@@ -579,4 +704,13 @@ def compareBikes(bike1, bike2):
     elif (trip1 > trip2):
         return 1
     else:
+        return -1
+
+def compareDates(date1, date2):
+
+    if (date1 == date2):
+        return 0
+    elif (date1 > date2):
+        return 1
+    else: 
         return -1

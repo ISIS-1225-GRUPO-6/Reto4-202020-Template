@@ -109,3 +109,12 @@ def estaciones(analyzer):
 
 def rutasEdad(analyzer, edad):
     model.rutasPorEdad(analyzer,edad)
+
+def cercanas(analyzer, lonin,latin,lonfin,latfin):
+    model.cercanas(analyzer,lonin,latin,lonfin,latfin)
+
+def publicidad(analyzer,edad):
+    model.publicidad(analyzer,edad)
+
+def mantenimiento(analyzer, idbike, fecha):
+    model.mantenimiento(analyzer,idbike,fecha)
