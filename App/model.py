@@ -333,7 +333,7 @@ def rutaCircular(analyzer, estacion, tiempoin, tiempofin):
             actual = lt.getElement(listafinal,i)
             print("ruta no: "+ str(i+1))
             for j in range(actual['size']-1):
-                info= m.get(analyzer['stationsStart'], lt.getElement(actual,j))
+                info= m.get(analyzer['stationsStart'], lt.getElement(actual,j))['value']
                 print(str(j+1)+". " + info["nombre"])
             print("con una duracion estimada de: "+str(int(actual['last']['info'])/60)+" minutos")   
 
@@ -376,7 +376,7 @@ def rutaresistencia(analyzer, estacion, tiempo):
             actual = lt.getElement(listafinal,i)
             print("ruta no: "+ str(i+1))
             for j in range(actual['size']-1):
-                info= m.get(analyzer['stationsStart'], lt.getElement(actual,j))
+                info= m.get(analyzer['stationsStart'], lt.getElement(actual,j))['value']
                 print(str(j+1)+". " + info["nombre"])
             print("con una duracion estimada de: "+str(int(actual['last']['info'])/60)+" minutos")   
 
