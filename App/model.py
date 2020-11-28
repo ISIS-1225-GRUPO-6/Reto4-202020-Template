@@ -33,6 +33,7 @@ from DISClib.Algorithms.Graphs import dijsktra as djk
 from math import radians, cos, sin, asin, sqrt
 from DISClib.Utils import error as error
 from DISClib.Algorithms.Graphs import bfs
+from DISClib.Algorithms.Graphs import dfs
 import datetime
 from datetime import date
 from DISClib.ADT import stack
@@ -266,8 +267,8 @@ def connectedComponents(analyzer):
     analyzer['components'] = scc.KosarajuSCC(analyzer['graph'])
     return scc.connectedComponents(analyzer['components'])
 
-def sameCC(sc, station1, station2):
-    return scc.stronglyConnected(sc, station1, station2)
+def sameCC(analyzer, station1, station2):
+    return scc.stronglyConnected(analyzer["components"], station1, station2)
 
 def totalConnections(analyzer):
     """
@@ -283,30 +284,92 @@ def totalStops(analyzer):
 
 def rutaCircular(analyzer, estacion, tiempoin, tiempofin):
     
-    adyacentes = gr.adjacents(analyzer['graph'], estacion)  #Lista estaciones adyacentes
-    conectados=lt.newList()
-    if gr.containsVertex(analyzer['graph'],estacion):
-        if adyacentes['size']!=0:
-            for ady in adyacentes['elements']:
-                tiempo = 0
-                analyzer['paths'] = bfs.BreadthFisrtSearch(analyzer['graph'], ady)
-                caminos = bfs.pathTo(analyzer['paths'], estacion)
-                lt.addFirst(caminos, estacion)
-                for i in range(lt.size(caminos)-1):
-                    arcos = gr.getEdge(analyzer['graph'], caminos["elements"][i], caminos["elements"][i+1])
-                    tiempo += int(arco["weight"])
-                caminos["distance"] = tiempo
-                lt.addLast(conectados, caminos)
-            if conectados is not None:
-                maximo=tiempofin
-                while (not stack.isEmpty(conectados)):
-                    stop = stack.pop(conectados)
-                    maximo -= int(stop["size"])
-                    if stop["distance"] >= tiempoin and stop["distance"] <= maximo: 
-                        lt.addLast(finlist, stop)                  
-    else:
-        print("la estacion no existe")
-    return conectados
+    if m.get(analyzer['stationsStart'],estacion) is not None:
+        lista1 = lt.newList("ARRAY_LIST")
+        adyacentes = gr.adjacents(analyzer['graph'], estacion)
+        for h in range (adyacentes['size']):
+            adyacente= lt.getElement(adyacentes,h)
+            fcc = sameCC(analyzer, estacion, adyacente)
+            if fcc:
+                tiempo=0
+                analyzer['paths'] = dfs.DepthFirstSearch(analyzer["graph"], adyacente)
+                caminos = dfs.pathTo(analyzer["paths"], estacion)
+                primero= caminos['first']
+                siguiente = primero['next']
+                for i in range(caminos['size']-1):
+                    infoin = primero['info']
+                    if siguiente is not None:
+                        infoul = siguiente['info']
+                        arco = gr.getEdge(analyzer["graph"], infoin, infoul)
+                        if arco is not None:
+                            tiempo += float(arco["weight"])
+                    primero = primero['next']
+                    siguiente = siguiente['next']
+                suma = float(caminos['size'])*1200
+                tiempo+=suma
+                lt.addLast(caminos,tiempo)
+                lt.addLast(lista1, caminos)
+
+        listafinal= lt.newList("ARRAY_LIST")
+        if lista1 is not None:
+            tmi = int(tiempoin)*60
+            tmf = int(tiempofin)*60
+            while (not stack.isEmpty(lista1)):
+                parada = stack.pop(lista1)
+                if parada['last'] >= tmi and parada['last'] <= tmf: 
+                    lt.addLast(listafinal, parada)     
+        print("la cantidad de rutas es : "+ str(listafinal['size']))
+        for i in range( listafinal['size'] ):
+            actual = lt.getElement(listafinal,i)
+            print("ruta no: "+ str(i+1))
+            for j in range(actual['size']-1):
+                info= m.get(analyzer['stationsStart'], lt.getElement(actual,j))
+                print(str(j+1)+". " + info["nombre"])
+            print("con una duracion estimada de: "+str(actual['last']/60)+" minutos")   
+
+
+def rutaresistencia(analyzer, estacion, tiempo):
+    
+    if m.get(analyzer['stationsStart'],estacion) is not None:
+        lista1 = lt.newList("ARRAY_LIST")
+        adyacentes = gr.adjacents(analyzer['graph'], estacion)
+        for h in range (adyacentes['size']):
+            adyacente= lt.getElement(adyacentes,h)
+            fcc = sameCC(analyzer, estacion, adyacente)
+            if fcc:
+                tiempo=0
+                analyzer['paths'] = dfs.DepthFirstSearch(analyzer["graph"], adyacente)
+                caminos = dfs.pathTo(analyzer["paths"], estacion)
+                primero= caminos['first']
+                siguiente = primero['next']
+                for i in range(caminos['size']-1):
+                    infoin = primero['info']
+                    if siguiente is not None:
+                        infoul = siguiente['info']
+                        arco = gr.getEdge(analyzer["graph"], infoin, infoul)
+                        if arco is not None:
+                            tiempo += float(arco["weight"])
+                    primero = primero['next']
+                    siguiente = siguiente['next']
+                lt.addLast(caminos,tiempo)
+                lt.addLast(lista1, caminos)
+
+        listafinal= lt.newList("ARRAY_LIST")
+        if lista1 is not None:
+            tmi = int(tiempo)*60
+            while (not stack.isEmpty(lista1)):
+                parada = stack.pop(lista1)
+                if parada['last'] <= tmi : 
+                    lt.addLast(listafinal, parada)     
+        print("la cantidad de rutas es : "+ str(listafinal['size']))
+        for i in range( listafinal['size'] ):
+            actual = lt.getElement(listafinal,i)
+            print("ruta no: "+ str(i+1))
+            for j in range(actual['size']-1):
+                info= m.get(analyzer['stationsStart'], lt.getElement(actual,j))
+                print(str(j+1)+". " + info["nombre"])
+            print("con una duracion estimada de: "+str(actual['last']/60)+" minutos")   
+
 
 def estaciones(analyzer):
     "requerimiento 3"
@@ -491,7 +554,7 @@ def rutasPorEdad(analyzer, edad):
     if ultimo is not None:
         info = m.get(analyzer['stationsEnd'],ultimo['info'])['value']
         print(str(pasos)+". "+ info["nombre"])
-    print("el tiempo estimado es: "+ str(tiempo))
+    print("el tiempo estimado es: "+ str(tiempo/60))
 
 def cercanas(analyzer, lon1,lat1,lon2,lat2):
     llaves = m.keySet(analyzer['stationsStart'])
@@ -554,7 +617,7 @@ def cercanas(analyzer, lon1,lat1,lon2,lat2):
         if ultimo is not None:
             info=m.get(analyzer['stationsEnd'],ultimo['info'])['value']
             print(str(pasos)+". "+ info["nombre"])
-        print("el tiempo estimado es: "+ str(tiempo))
+        print("el tiempo estimado es: "+ str(tiempo/60))
 
 def publicidad(analyzer, edad):
     cuantosinicio=0
@@ -642,13 +705,13 @@ def mantenimiento(analyzer, idbike, fecha):
     if info is not None:
         dia = datetime.datetime.strptime(fecha, '%Y-%m-%d')
         info2= m.get(info["fecha"], dia.date())['value']
-        tiempototaluso= int(info2["tiempouso"])
+        tiempototaluso= int(info2["tiempouso"])/60
         tiempoestacionada = ((60*24)-tiempototaluso)
         viajes=[info2["viajes"]]
         print("el tiempo de uso es : "+ str(tiempototaluso)+", y el tiempo estacionada es: "+ str(tiempoestacionada)+", minutos")
         cual=0
-        for viaje in viajes:
-            print(str(cual)+". "+ viaje["start station name"] )
+        for i in range(info2["viajes"]['size']):
+            print(str(cual)+". "+ lt.getElement(info2["viajes"],i)["start station name"] )
             cual+=1
 
 # ==============================

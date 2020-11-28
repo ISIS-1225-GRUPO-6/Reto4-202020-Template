@@ -55,7 +55,7 @@ def printMenu():
     print("1- Inicializar Analizador")
     print("2- Cargar información de rutas de citybike")
     print("3- Calcular componentes conectados")
-    print("4- Requerimiento 2")
+    print("4- Ruta circular")
     print("5- Informacion estaciones")
     print("6- Requerimiento 4")
     print("7- recomendar rutas por edad")
@@ -98,15 +98,18 @@ def optionThree():
           str(controller.connectedComponents(cont)))
 
 def optionfour():
-    print("hola")
-
-
+    idestacion = input("id de la estacion de inicio\n")
+    tiempoin = int(input("tiempo minimo disponible\n"))
+    tiempofin = int(input("tiempo maximo disponible\n"))
+    controller.rutacircular(cont, idestacion,tiempoin,tiempofin)
 
 def optionfive():
     controller.estaciones(cont)
 
 def optionsix():
-    print("hola")
+    idestacion = input("id de la estacion de inicio\n")
+    tiempo = int(input("tiempo minimo disponible\n"))
+    controller.rutaresistencia(cont, idestacion, tiempo)
 
 def optionseven():
     print( "1. 0-10 \n2. 11-20 \n3. 21-30 \n4. 31-40 \n5. 41-50 \n6. 51-60 \n7. 60+")
@@ -128,8 +131,8 @@ def optionnine():
     controller.publicidad(cont,cual)
 
 def optionten():
-    bikeid=input("ingrese bike id")
-    fecha = input("ingrese fecha y-m-d")
+    bikeid=input("ingrese bike id\n")
+    fecha = input("ingrese fecha y-m-d\n")
     controller.mantenimiento(cont,bikeid,fecha)
 
 """

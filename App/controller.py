@@ -118,3 +118,9 @@ def publicidad(analyzer,edad):
 
 def mantenimiento(analyzer, idbike, fecha):
     model.mantenimiento(analyzer,idbike,fecha)
+
+def rutacircular( analyzer, idestacion, tiempoin, tiempofin):
+    model.rutaCircular(analyzer, idestacion, tiempoin,tiempofin)
+
+def rutaresistencia(analyzer, idestacion, tiempo):
+    model.rutaresistencia(analyzer, idestacion, tiempo)
