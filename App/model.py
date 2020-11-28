@@ -268,7 +268,16 @@ def connectedComponents(analyzer):
     return scc.connectedComponents(analyzer['components'])
 
 def sameCC(analyzer, station1, station2):
-    return scc.stronglyConnected(analyzer["components"], station1, station2)
+    vert1 = gr.containsVertex(analyzer["graph"], station1)
+    vert2 = gr.containsVertex(analyzer["graph"], station2)
+    if vert1 is False and vert2 is False:
+        return "0"
+    elif vert1 is False:
+        return "1"
+    elif vert2 is False:
+        return "2"
+    else:
+        return scc.stronglyConnected(analyzer['components'], station1, station2)
 
 def totalConnections(analyzer):
     """
@@ -287,6 +296,7 @@ def rutaCircular(analyzer, estacion, tiempoin, tiempofin):
     if m.get(analyzer['stationsStart'],estacion) is not None:
         lista1 = lt.newList("ARRAY_LIST")
         adyacentes = gr.adjacents(analyzer['graph'], estacion)
+        connectedComponents(analyzer)
         for h in range (adyacentes['size']):
             adyacente= lt.getElement(adyacentes,h)
             fcc = sameCC(analyzer, estacion, adyacente)
@@ -327,12 +337,12 @@ def rutaCircular(analyzer, estacion, tiempoin, tiempofin):
                 print(str(j+1)+". " + info["nombre"])
             print("con una duracion estimada de: "+str(actual['last']/60)+" minutos")   
 
-
 def rutaresistencia(analyzer, estacion, tiempo):
     
     if m.get(analyzer['stationsStart'],estacion) is not None:
         lista1 = lt.newList("ARRAY_LIST")
         adyacentes = gr.adjacents(analyzer['graph'], estacion)
+        connectedComponents(analyzer)
         for h in range (adyacentes['size']):
             adyacente= lt.getElement(adyacentes,h)
             fcc = sameCC(analyzer, estacion, adyacente)
@@ -369,7 +379,6 @@ def rutaresistencia(analyzer, estacion, tiempo):
                 info= m.get(analyzer['stationsStart'], lt.getElement(actual,j))
                 print(str(j+1)+". " + info["nombre"])
             print("con una duracion estimada de: "+str(actual['last']/60)+" minutos")   
-
 
 def estaciones(analyzer):
     "requerimiento 3"
